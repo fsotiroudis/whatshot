@@ -25,7 +25,6 @@ const MetricCard: React.FC<MetricCardProps> = ({
   historicalData = [],
   hideIfInsignificant = true,
 }) => {
-  // Hide card if changes are insignificant
   if (hideIfInsignificant && weeklyChange && Math.abs(weeklyChange) < 10) {
     return null;
   }
@@ -33,8 +32,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const weeklyChangeColor = weeklyChange ? getChangeColor(weeklyChange) : '';
   const monthlyChangeColor = monthlyChange ? getChangeColor(monthlyChange) : '';
 
-  // Calculate sparkline points with improved trend visualization
-  const getSparklinePoints = () => {
+  // Generate curved sparkline path
+  const getSparklinePath = () => {
     if (historicalData.length < 2) return '';
     
     const values = historicalData.map(d => d.value);
@@ -42,18 +41,32 @@ const MetricCard: React.FC<MetricCardProps> = ({
     const max = Math.max(...values);
     const range = max - min || 1;
     
-    // Adjust the Y-scale to emphasize the trend
-    // For positive trends, start from bottom (80) to top (20)
-    // For negative trends, start from top (20) to bottom (80)
-    const baseY = weeklyChange && weeklyChange > 0 ? 80 : 20;
-    const targetY = weeklyChange && weeklyChange > 0 ? 20 : 80;
+    // For negative trends, flip the Y coordinates
+    const isNegative = weeklyChange && weeklyChange < 0;
+    const getY = (value: number) => {
+      const normalizedValue = (value - min) / range;
+      return isNegative 
+        ? 20 + (normalizedValue * 60) // Start high, end low for negative trends
+        : 80 - (normalizedValue * 60); // Start low, end high for positive trends
+    };
+
+    // Create curved path using cubic bezier curves
+    let path = `M 0,${getY(historicalData[0].value)}`;
     
-    return historicalData.map((point, i) => {
-      const x = (i / (historicalData.length - 1)) * 100;
-      const normalizedValue = (point.value - min) / range;
-      const y = baseY + (normalizedValue * (targetY - baseY));
-      return `${x},${y}`;
-    }).join(' ');
+    for (let i = 1; i < historicalData.length; i++) {
+      const x1 = ((i - 1) / (historicalData.length - 1)) * 100;
+      const x2 = (i / (historicalData.length - 1)) * 100;
+      const y1 = getY(historicalData[i - 1].value);
+      const y2 = getY(historicalData[i].value);
+      
+      // Control points for the curve
+      const cx1 = x1 + ((x2 - x1) / 3);
+      const cx2 = x2 - ((x2 - x1) / 3);
+      
+      path += ` C ${cx1},${y1} ${cx2},${y2} ${x2},${y2}`;
+    }
+    
+    return path;
   };
 
   return (
@@ -104,11 +117,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
                 viewBox="0 0 100 100" 
                 preserveAspectRatio="none"
               >
-                <polyline
-                  points={getSparklinePoints()}
+                <path
+                  d={getSparklinePath()}
                   fill="none"
                   stroke={weeklyChange && weeklyChange > 0 ? '#059669' : '#DC2626'}
                   strokeWidth="2"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
