@@ -14,10 +14,9 @@ interface BalticRateRow {
 interface BalticRateCardProps {
   dayDate: string;
   vesselType: string;
-  onMetricUpdate: (metric: any) => void;
 }
 
-const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType, onMetricUpdate }) => {
+const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) => {
   const [data, setData] = useState<BalticRateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,29 +29,10 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType, on
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
       })
-      .then(data => {
-        setData(data);
-        if (data.length > 0) {
-          const sorted = [...data].sort((a, b) => b.RATEDATE.localeCompare(a.RATEDATE));
-          const latest = sorted[0];
-          const previous = sorted[1];
-          const prevRate = previous ? previous.RATE : null;
-          const change = prevRate !== null ? ((latest.RATE - prevRate) / prevRate) * 100 : 0;
-          
-          onMetricUpdate({
-            title: 'Baltic Rate',
-            value: latest.RATE,
-            change,
-            unit: 'WS',
-            routeId: latest.ROUTEID,
-            vesselType: latest.VESSELTYPE,
-            vesselClass: latest.VESSELCLASS
-          });
-        }
-      })
+      .then(setData)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [dayDate, vesselType, onMetricUpdate]);
+  }, [dayDate, vesselType]);
 
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return null;
@@ -63,6 +43,7 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType, on
   const prevRate = previous ? previous.RATE : null;
   const change = prevRate !== null ? ((latest.RATE - prevRate) / prevRate) * 100 : 0;
 
+  // Generate historical data based on the current rate and weekly change
   const historicalData = generateHistoricalData(latest.RATE, change);
 
   return (
@@ -74,7 +55,7 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType, on
       icon={<Anchor size={20} />}
       isLoading={loading}
       historicalData={historicalData}
-      hideIfInsignificant={false}
+      hideIfInsignificant={true}
     />
   );
 };
