@@ -52,31 +52,30 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center mb-4">
         <Lightbulb className="text-amber-500 mr-2" size={20} />
-        <h3 className="text-lg font-medium text-gray-900">Quick Takes</h3>
+        <h3 className="text-lg font-medium text-gray-900">Market Pulse</h3>
       </div>
 
       {isLoading || isGenerating ? (
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
           <div className="h-4 bg-gray-200 rounded w-5/6"></div>
         </div>
       ) : error ? (
         <div className="text-red-500 p-4 rounded-md bg-red-50">
-          <p>Whoops! Our crystal ball needs polishing. Try again?</p>
+          <p className="font-medium">Oops! Something went wrong:</p>
+          <p>{error}</p>
         </div>
       ) : insights.length > 0 ? (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {insights.map((insight, index) => (
-            <li 
-              key={index} 
-              className="text-gray-600 hover:bg-blue-50 p-2 rounded-md transition-colors cursor-pointer"
-            >
-              {insight}
+            <li key={index} className="text-gray-600 hover:bg-blue-50 p-2 rounded-md transition-colors">
+              <span className="text-sm leading-relaxed">{insight}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500 italic">Scanning the seven seas... ⚓️</p>
+        <p className="text-gray-500 italic text-sm">Reading the shipping tea leaves... ⚓️</p>
       )}
     </div>
   );

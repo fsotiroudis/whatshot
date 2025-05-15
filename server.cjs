@@ -139,7 +139,7 @@ app.get('/api/voyages-demand', (req, res) => {
   res.json(generateMockVoyagesDemand(dayDate, vesselType, areaName));
 });
 
-// New endpoint for generating insights with improved prompting
+// New endpoint for generating insights with logging
 app.post('/api/generate-insights', async (req, res) => {
   const { metrics } = req.body;
   
@@ -149,15 +149,15 @@ app.post('/api/generate-insights', async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You're a witty shipping analyst who loves the maritime world. Give me quick, punchy takes on market trends - think snappy one-liners with shipping lingo. Make it fun but insightful, like you're chatting at a port cafe. No fluff, just the juicy bits!"
+          content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it super brief and snappy - one line per insight! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. No emojis, no stars, no bullets."
         },
         {
           role: "user",
-          content: `What's hot in these shipping metrics? Give me 2-3 zingers:\n${JSON.stringify(metrics, null, 2)}`
+          content: `What's the quick scoop on these shipping metrics? Give me 2-3 quick hits:\n${JSON.stringify(metrics, null, 2)}`
         }
       ],
-      temperature: 0.8,
-      max_tokens: 150
+      temperature: 0.7,
+      max_tokens: 250
     });
 
     const insights = completion.choices[0].message.content
