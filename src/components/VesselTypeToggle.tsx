@@ -21,7 +21,7 @@ const VesselTypeToggle: React.FC<VesselTypeToggleProps> = ({
         } transition-colors duration-200 ease-in-out`}
         onClick={() => onVesselTypeChange('Dry')}
       >
-        Dry
+        C5
       </button>
       <button
         type="button"
@@ -32,7 +32,7 @@ const VesselTypeToggle: React.FC<VesselTypeToggleProps> = ({
         } transition-colors duration-200 ease-in-out`}
         onClick={() => onVesselTypeChange('Tanker')}
       >
-        Tanker
+        TD25
       </button>
     </div>
   );

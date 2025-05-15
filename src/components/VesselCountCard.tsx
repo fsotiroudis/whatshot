@@ -5,7 +5,7 @@ interface VesselCountRow {
   VESSELTYPE: string;
   VESSELCLASS: string;
   CURRENTAREANAMELEVEL0: string;
-  VESSEL_COUNT: number;
+  VESSELCOUNT: number;
 }
 
 interface VesselCountCardProps {
@@ -37,7 +37,7 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
 
   // Find the row with the largest vessel count
   const mostImportant = data.reduce((max, row) =>
-    row.VESSEL_COUNT > max.VESSEL_COUNT ? row : max, data[0]
+    row.VESSELCOUNT > max.VESSELCOUNT ? row : max, data[0]
   );
 
   // Find previous day's count for the same group (if available)
@@ -47,9 +47,12 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
     row.CURRENTAREANAMELEVEL0 === mostImportant.CURRENTAREANAMELEVEL0 &&
     row.DAYDATE < mostImportant.DAYDATE
   );
-  const prevCount = prevDay ? prevDay.VESSEL_COUNT : null;
-  const change = prevCount !== null ? ((mostImportant.VESSEL_COUNT - prevCount) / prevCount) * 100 : 0;
+  const prevCount = prevDay ? prevDay.VESSELCOUNT : null;
+  const change = prevCount !== null ? ((mostImportant.VESSELCOUNT - prevCount) / prevCount) * 100 : 0;
   const changeColor = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500';
+  const isSignificant = Math.abs(change) >= 10;
+
+  if (!isSignificant) return null;
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -58,7 +61,7 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {mostImportant.VESSEL_COUNT.toLocaleString()}
+              {mostImportant.VESSELCOUNT.toLocaleString()}
             </span>
             <span className="ml-1 text-gray-500 text-sm">vessels</span>
           </div>

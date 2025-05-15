@@ -36,13 +36,42 @@ const CongestionVesselCountCard: React.FC<CongestionVesselCountCardProps> = ({ d
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return <div>No data found.</div>;
 
-  // Sort by DAYDATE descending to get the latest and previous
-  const sorted = [...data].sort((a, b) => b.DAYDATE.localeCompare(a.DAYDATE));
-  const latest = sorted[0];
-  const previous = sorted[1];
-  const prevCount = previous ? previous.CONGESTEDVESSELS : null;
-  const change = prevCount !== null ? ((latest.CONGESTEDVESSELS - prevCount) / prevCount) * 100 : 0;
+  // Find the row with the largest vessel count change
+  const mostImportant = data.reduce((max, row) => {
+    const prevDay = data.find(r => 
+      r.VESSELTYPE === row.VESSELTYPE && 
+      r.VESSELCLASS === row.VESSELCLASS &&
+      r.PORTNAME === row.PORTNAME &&
+      r.DAYDATE < row.DAYDATE
+    );
+    const prevCount = prevDay ? prevDay.CONGESTEDVESSELS : null;
+    const currentChange = prevCount !== null ? Math.abs((row.CONGESTEDVESSELS - prevCount) / prevCount) * 100 : 0;
+    
+    const maxPrevDay = data.find(r => 
+      r.VESSELTYPE === max.VESSELTYPE && 
+      r.VESSELCLASS === max.VESSELCLASS &&
+      r.PORTNAME === max.PORTNAME &&
+      r.DAYDATE < max.DAYDATE
+    );
+    const maxPrevCount = maxPrevDay ? maxPrevDay.CONGESTEDVESSELS : null;
+    const maxChange = maxPrevCount !== null ? Math.abs((max.CONGESTEDVESSELS - maxPrevCount) / maxPrevCount) * 100 : 0;
+    
+    return currentChange > maxChange ? row : max;
+  }, data[0]);
+
+  // Find previous day's count for the same group
+  const prevDay = data.find(row =>
+    row.VESSELTYPE === mostImportant.VESSELTYPE &&
+    row.VESSELCLASS === mostImportant.VESSELCLASS &&
+    row.PORTNAME === mostImportant.PORTNAME &&
+    row.DAYDATE < mostImportant.DAYDATE
+  );
+  const prevCount = prevDay ? prevDay.CONGESTEDVESSELS : null;
+  const change = prevCount !== null ? ((mostImportant.CONGESTEDVESSELS - prevCount) / prevCount) * 100 : 0;
   const changeColor = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500';
+  const isSignificant = Math.abs(change) >= 10;
+
+  if (!isSignificant) return null;
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -51,7 +80,7 @@ const CongestionVesselCountCard: React.FC<CongestionVesselCountCardProps> = ({ d
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {latest.CONGESTEDVESSELS.toLocaleString()}
+              {mostImportant.CONGESTEDVESSELS.toLocaleString()}
             </span>
             <span className="ml-1 text-gray-500 text-sm">vessels</span>
           </div>
@@ -68,7 +97,7 @@ const CongestionVesselCountCard: React.FC<CongestionVesselCountCardProps> = ({ d
         </div>
       </div>
       <div className="mt-2 text-gray-700 text-xs">
-        {latest.VESSELTYPE} / {latest.VESSELCLASS} in {latest.PORTNAME} as of {latest.DAYDATE}
+        {mostImportant.VESSELTYPE} / {mostImportant.VESSELCLASS} in {mostImportant.PORTNAME} as of {mostImportant.DAYDATE}
       </div>
     </div>
   );

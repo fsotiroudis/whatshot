@@ -36,13 +36,42 @@ const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselTy
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return <div>No data found.</div>;
 
-  // Sort by DAYDATE descending to get the latest and previous
-  const sorted = [...data].sort((a, b) => b.DAYDATE.localeCompare(a.DAYDATE));
-  const latest = sorted[0];
-  const previous = sorted[1];
-  const prevSupply = previous ? previous.SUPPLY : null;
-  const change = prevSupply !== null ? ((latest.SUPPLY - prevSupply) / prevSupply) * 100 : 0;
+  // Find the row with the largest supply change
+  const mostImportant = data.reduce((max, row) => {
+    const prevDay = data.find(r => 
+      r.VESSELTYPE === row.VESSELTYPE && 
+      r.VESSELCLASS === row.VESSELCLASS &&
+      r.PORTNAME === row.PORTNAME &&
+      r.DAYDATE < row.DAYDATE
+    );
+    const prevSupply = prevDay ? prevDay.SUPPLY : null;
+    const currentChange = prevSupply !== null ? Math.abs((row.SUPPLY - prevSupply) / prevSupply) * 100 : 0;
+    
+    const maxPrevDay = data.find(r => 
+      r.VESSELTYPE === max.VESSELTYPE && 
+      r.VESSELCLASS === max.VESSELCLASS &&
+      r.PORTNAME === max.PORTNAME &&
+      r.DAYDATE < max.DAYDATE
+    );
+    const maxPrevSupply = maxPrevDay ? maxPrevDay.SUPPLY : null;
+    const maxChange = maxPrevSupply !== null ? Math.abs((max.SUPPLY - maxPrevSupply) / maxPrevSupply) * 100 : 0;
+    
+    return currentChange > maxChange ? row : max;
+  }, data[0]);
+
+  // Find previous day's supply for the same group
+  const prevDay = data.find(row =>
+    row.VESSELTYPE === mostImportant.VESSELTYPE &&
+    row.VESSELCLASS === mostImportant.VESSELCLASS &&
+    row.PORTNAME === mostImportant.PORTNAME &&
+    row.DAYDATE < mostImportant.DAYDATE
+  );
+  const prevSupply = prevDay ? prevDay.SUPPLY : null;
+  const change = prevSupply !== null ? ((mostImportant.SUPPLY - prevSupply) / prevSupply) * 100 : 0;
   const changeColor = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500';
+  const isSignificant = Math.abs(change) >= 10;
+
+  if (!isSignificant) return null;
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -51,7 +80,7 @@ const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselTy
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {latest.SUPPLY.toLocaleString()}
+              {mostImportant.SUPPLY.toLocaleString()}
             </span>
             <span className="ml-1 text-gray-500 text-sm">vessels</span>
           </div>
@@ -68,7 +97,7 @@ const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselTy
         </div>
       </div>
       <div className="mt-2 text-gray-700 text-xs">
-        {latest.VESSELTYPE} / {latest.VESSELCLASS} in {latest.PORTNAME} as of {latest.DAYDATE}
+        {mostImportant.VESSELTYPE} / {mostImportant.VESSELCLASS} in {mostImportant.PORTNAME} as of {mostImportant.DAYDATE}
       </div>
     </div>
   );

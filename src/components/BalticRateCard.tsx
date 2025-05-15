@@ -36,13 +36,36 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) 
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return <div>No data found.</div>;
 
-  // Sort by RATEDATE descending to get the latest and previous
-  const sorted = [...data].sort((a, b) => b.RATEDATE.localeCompare(a.RATEDATE));
-  const latest = sorted[0];
-  const previous = sorted[1];
-  const prevRate = previous ? previous.RATE : null;
-  const change = prevRate !== null ? ((latest.RATE - prevRate) / prevRate) * 100 : 0;
+  // Find the row with the largest rate change
+  const mostImportant = data.reduce((max, row) => {
+    const prevDay = data.find(r => 
+      r.ROUTEID === row.ROUTEID && 
+      r.RATEDATE < row.RATEDATE
+    );
+    const prevRate = prevDay ? prevDay.RATE : null;
+    const currentChange = prevRate !== null ? Math.abs((row.RATE - prevRate) / prevRate) * 100 : 0;
+    
+    const maxPrevDay = data.find(r => 
+      r.ROUTEID === max.ROUTEID && 
+      r.RATEDATE < max.RATEDATE
+    );
+    const maxPrevRate = maxPrevDay ? maxPrevDay.RATE : null;
+    const maxChange = maxPrevRate !== null ? Math.abs((max.RATE - maxPrevRate) / maxPrevRate) * 100 : 0;
+    
+    return currentChange > maxChange ? row : max;
+  }, data[0]);
+
+  // Find previous day's rate for the same route
+  const prevDay = data.find(row =>
+    row.ROUTEID === mostImportant.ROUTEID &&
+    row.RATEDATE < mostImportant.RATEDATE
+  );
+  const prevRate = prevDay ? prevDay.RATE : null;
+  const change = prevRate !== null ? ((mostImportant.RATE - prevRate) / prevRate) * 100 : 0;
   const changeColor = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500';
+  const isSignificant = Math.abs(change) >= 10;
+
+  if (!isSignificant) return null;
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -51,7 +74,7 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) 
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {latest.RATE.toLocaleString()}
+              {mostImportant.RATE.toLocaleString()}
             </span>
             <span className="ml-1 text-gray-500 text-sm">WS</span>
           </div>
@@ -68,9 +91,9 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) 
         </div>
       </div>
       <div className="mt-2 text-gray-700 text-xs">
-        {latest.ROUTEID} as of {latest.RATEDATE}
-        {latest.VESSELTYPE && latest.VESSELCLASS && (
-          <span> — {latest.VESSELTYPE} / {latest.VESSELCLASS}</span>
+        {mostImportant.ROUTEID} as of {mostImportant.RATEDATE}
+        {mostImportant.VESSELTYPE && mostImportant.VESSELCLASS && (
+          <span> — {mostImportant.VESSELTYPE} / {mostImportant.VESSELCLASS}</span>
         )}
       </div>
     </div>
