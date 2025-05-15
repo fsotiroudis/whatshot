@@ -44,8 +44,8 @@ const VoyagesDemandCard: React.FC<VoyagesDemandCardProps> = ({ dayDate, vesselTy
   const prevDemand = previous ? previous.DEMAND : null;
   const change = prevDemand !== null ? ((latest.DEMAND - prevDemand) / prevDemand) * 100 : 0;
 
-  // Generate historical data based on the current demand
-  const historicalData = generateHistoricalData(latest.DEMAND);
+  // Generate historical data based on the current demand and weekly change
+  const historicalData = generateHistoricalData(latest.DEMAND, change);
 
   return (
     <MetricCard

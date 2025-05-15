@@ -44,8 +44,8 @@ const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselTy
   const prevSupply = previous ? previous.SUPPLY : null;
   const change = prevSupply !== null ? ((latest.SUPPLY - prevSupply) / prevSupply) * 100 : 0;
 
-  // Generate historical data based on the current supply
-  const historicalData = generateHistoricalData(latest.SUPPLY);
+  // Generate historical data based on the current supply and weekly change
+  const historicalData = generateHistoricalData(latest.SUPPLY, change);
 
   return (
     <MetricCard

@@ -43,8 +43,8 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
   const prevCount = previous ? previous.VESSEL_COUNT : null;
   const change = prevCount !== null ? ((latest.VESSEL_COUNT - prevCount) / prevCount) * 100 : 0;
 
-  // Generate historical data based on the current vessel count
-  const historicalData = generateHistoricalData(latest.VESSEL_COUNT);
+  // Generate historical data based on the current count and weekly change
+  const historicalData = generateHistoricalData(latest.VESSEL_COUNT, change);
 
   return (
     <MetricCard

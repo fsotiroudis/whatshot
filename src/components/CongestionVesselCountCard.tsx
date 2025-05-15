@@ -44,8 +44,8 @@ const CongestionVesselCountCard: React.FC<CongestionVesselCountCardProps> = ({ d
   const prevCount = previous ? previous.CONGESTEDVESSELS : null;
   const change = prevCount !== null ? ((latest.CONGESTEDVESSELS - prevCount) / prevCount) * 100 : 0;
 
-  // Generate historical data based on the current congested vessels count
-  const historicalData = generateHistoricalData(latest.CONGESTEDVESSELS);
+  // Generate historical data based on the current congested vessels count and weekly change
+  const historicalData = generateHistoricalData(latest.CONGESTEDVESSELS, change);
 
   return (
     <MetricCard
