@@ -149,7 +149,7 @@ app.post('/api/generate-insights', async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it super brief and snappy - one line per insight! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. No emojis, no stars, no bullets."
+          content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it super brief and snappy but funny - one line per insight - bullet! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. No titles"
         },
         {
           role: "user",
