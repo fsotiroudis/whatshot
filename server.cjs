@@ -143,38 +143,22 @@ app.get('/api/voyages-demand', (req, res) => {
 app.post('/api/generate-insights', async (req, res) => {
   const { metrics } = req.body;
   
-  console.log('OpenAI API Request:', {
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "system",
-        content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it light and snappy! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. 🚢"
-      },
-      {
-        role: "user",
-        content: `What's the scoop on these shipping metrics? Give me 2-3 quick hits:\n${JSON.stringify(metrics, null, 2)}`
-      }
-    ]
-  });
-  
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it light and snappy! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. 🚢"
+          content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it super brief and snappy - one line per insight! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. No emojis, no stars, no bullets."
         },
         {
           role: "user",
-          content: `What's the scoop on these shipping metrics? Give me 2-3 quick hits:\n${JSON.stringify(metrics, null, 2)}`
+          content: `What's the quick scoop on these shipping metrics? Give me 2-3 quick hits:\n${JSON.stringify(metrics, null, 2)}`
         }
       ],
       temperature: 0.7,
       max_tokens: 250
     });
-
-    console.log('OpenAI API Response:', completion);
 
     const insights = completion.choices[0].message.content
       .split('\n')

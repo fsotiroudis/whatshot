@@ -67,7 +67,7 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
           <p>{error}</p>
         </div>
       ) : insights.length > 0 ? (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {insights.map((insight, index) => (
             <li key={index} className="text-gray-600 hover:bg-blue-50 p-2 rounded-md transition-colors">
               <span className="text-sm leading-relaxed">{insight}</span>
@@ -75,7 +75,7 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500 italic text-sm">Reading the shipping tea leaves... 🔮</p>
+        <p className="text-gray-500 italic text-sm">Reading the shipping tea leaves... ⚓️</p>
       )}
     </div>
   );
