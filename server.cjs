@@ -1,8 +1,14 @@
 const express = require('express');
 const cors = require('cors');
+const OpenAI = require('openai');
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // Mock data generator functions
 const generateMockVesselCount = (dayDate, vesselType) => {
@@ -100,6 +106,38 @@ const generateMockVoyagesDemand = (dayDate, vesselType, areaName) => {
     }
   ];
 };
+
+// New endpoint for generating insights
+app.post('/api/generate-insights', async (req, res) => {
+  const { metrics } = req.body;
+  
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a shipping market analyst expert. Analyze the provided metrics and generate insightful observations about market trends, focusing on significant changes and their potential implications."
+        },
+        {
+          role: "user",
+          content: `Please analyze these shipping market metrics and provide 3-4 key insights:\n${JSON.stringify(metrics, null, 2)}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 250
+    });
+
+    const insights = completion.choices[0].message.content
+      .split('\n')
+      .filter(insight => insight.trim().length > 0);
+
+    res.json({ insights });
+  } catch (error) {
+    console.error('Error generating insights:', error);
+    res.status(500).json({ error: 'Failed to generate insights' });
+  }
+});
 
 // API endpoints
 app.get('/api/vessel-count', (req, res) => {

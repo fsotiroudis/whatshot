@@ -1,40 +1,76 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 
+interface Metric {
+  title: string;
+  value: number;
+  change: number;
+  unit: string;
+}
+
 interface InsightsCardProps {
-  insights: string[];
+  metrics: Metric[];
   isLoading?: boolean;
 }
 
-const InsightsCard: React.FC<InsightsCardProps> = ({ insights, isLoading = false }) => {
+const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false }) => {
+  const [insights, setInsights] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    const generateInsights = async () => {
+      if (!metrics.length || isLoading) return;
+      
+      setIsGenerating(true);
+      try {
+        const response = await fetch('http://localhost:4000/api/generate-insights', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ metrics }),
+        });
+
+        if (!response.ok) throw new Error('Failed to generate insights');
+        
+        const data = await response.json();
+        setInsights(data.insights);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to generate insights');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateInsights();
+  }, [metrics, isLoading]);
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
+    <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center mb-4">
         <Lightbulb className="text-amber-500 mr-2" size={20} />
-        <h3 className="text-gray-800 font-medium">Market Insights</h3>
+        <h3 className="text-lg font-medium text-gray-900">Market Insights</h3>
       </div>
-      
-      {isLoading ? (
-        <div className="animate-pulse space-y-3">
+
+      {isLoading || isGenerating ? (
+        <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
           <div className="h-4 bg-gray-200 rounded w-full"></div>
           <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {insights.map((insight, index) => (
-            <li key={index} className="flex items-start">
-              <span className="text-blue-600 mr-2 mt-0.5">•</span>
-              <span className="text-gray-700 text-sm">{insight}</span>
+            <li key={index} className="flex items-start text-gray-700">
+              <span className="text-blue-600 mr-2">•</span>
+              <span>{insight}</span>
             </li>
           ))}
         </ul>
       )}
-      
-      <div className="mt-4 text-xs text-gray-500">
-        Last updated: {new Date().toLocaleString()}
-      </div>
     </div>
   );
 };

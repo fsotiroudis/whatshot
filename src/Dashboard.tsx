@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import { VesselType } from './types';
-import { generateInsights } from './utils/dataUtils';
 import VesselCountCard from './components/VesselCountCard';
 import BalticRateCard from './components/BalticRateCard';
 import CongestionVesselCountCard from './components/CongestionVesselCountCard';
 import TonnageSupplyCard from './components/TonnageSupplyCard';
 import VoyagesDemandCard from './components/VoyagesDemandCard';
 import CongestionPortDaysCard from './components/CongestionPortDaysCard';
+import InsightsCard from './components/InsightsCard';
 
 const Dashboard: React.FC = () => {
   const [vesselType, setVesselType] = useState<VesselType>('Dry');
-  const [insights, setInsights] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [metrics, setMetrics] = useState<any[]>([]);
 
   // Use today's date as the initial date
   const today = new Date().toISOString().split('T')[0];
@@ -22,10 +22,9 @@ const Dashboard: React.FC = () => {
     setIsLoading(true);
     // Simulate API call delay
     setTimeout(() => {
-      setInsights(generateInsights(vesselType));
       setIsLoading(false);
     }, 500);
-  }, [vesselType]);
+  }, []);
 
   const handleVesselTypeChange = (type: VesselType) => {
     setVesselType(type);
@@ -35,6 +34,20 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     refreshData();
   }, [refreshData]);
+
+  // Collect metrics for insights generation
+  const updateMetrics = (newMetric: any) => {
+    setMetrics(current => {
+      const updated = [...current];
+      const index = updated.findIndex(m => m.title === newMetric.title);
+      if (index >= 0) {
+        updated[index] = newMetric;
+      } else {
+        updated.push(newMetric);
+      }
+      return updated;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,47 +73,43 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <VesselCountCard 
             dayDate={selectedDate} 
-            vesselType={vesselType} 
+            vesselType={vesselType}
+            onMetricUpdate={updateMetrics}
           />
           <BalticRateCard 
             dayDate={selectedDate} 
-            vesselType={vesselType} 
+            vesselType={vesselType}
+            onMetricUpdate={updateMetrics}
           />
           <CongestionVesselCountCard 
             dayDate={selectedDate} 
             portName="Rotterdam" 
-            vesselType={vesselType} 
+            vesselType={vesselType}
+            onMetricUpdate={updateMetrics}
           />
           <CongestionPortDaysCard 
             dayDate={selectedDate} 
             portName="Rotterdam" 
-            vesselType={vesselType} 
+            vesselType={vesselType}
+            onMetricUpdate={updateMetrics}
           />
           <TonnageSupplyCard 
             dayDate={selectedDate} 
             vesselType={vesselType} 
-            portName="Houston" 
+            portName="Houston"
+            onMetricUpdate={updateMetrics}
           />
           <VoyagesDemandCard 
             dayDate={selectedDate} 
             vesselType={vesselType} 
-            areaName="US Gulf" 
+            areaName="US Gulf"
+            onMetricUpdate={updateMetrics}
           />
         </div>
 
-        {insights.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Market Insights</h3>
-            <ul className="space-y-3">
-              {insights.map((insight, index) => (
-                <li key={index} className="flex items-start text-gray-700">
-                  <span className="text-blue-600 mr-2">•</span>
-                  <span>{insight}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div className="mt-8">
+          <InsightsCard metrics={metrics} isLoading={isLoading} />
+        </div>
       </main>
     </div>
   );
