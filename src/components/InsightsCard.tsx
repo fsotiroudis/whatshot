@@ -52,7 +52,7 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center mb-4">
         <Lightbulb className="text-amber-500 mr-2" size={20} />
-        <h3 className="text-lg font-medium text-gray-900">Market Buzz ⚡</h3>
+        <h3 className="text-lg font-medium text-gray-900">Market Pulse</h3>
       </div>
 
       {isLoading || isGenerating ? (
@@ -69,8 +69,7 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
       ) : insights.length > 0 ? (
         <ul className="space-y-4">
           {insights.map((insight, index) => (
-            <li key={index} className="flex items-start text-gray-600 hover:bg-blue-50 p-2 rounded-md transition-colors">
-              <span className="text-blue-500 mr-2">💫</span>
+            <li key={index} className="text-gray-600 hover:bg-blue-50 p-2 rounded-md transition-colors">
               <span className="text-sm leading-relaxed">{insight}</span>
             </li>
           ))}
