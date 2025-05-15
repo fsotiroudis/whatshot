@@ -148,11 +148,11 @@ app.post('/api/generate-insights', async (req, res) => {
     messages: [
       {
         role: "system",
-        content: "You are a shipping market analyst. Keep your analysis light and focused on key trends. Use shipping industry terminology naturally. Focus on practical implications for charterers and shipowners. Limit each insight to 1-2 sentences."
+        content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it light and snappy! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. 🚢"
       },
       {
         role: "user",
-        content: `Analyze these shipping metrics and provide 2-3 key market insights:\n${JSON.stringify(metrics, null, 2)}`
+        content: `What's the scoop on these shipping metrics? Give me 2-3 quick hits:\n${JSON.stringify(metrics, null, 2)}`
       }
     ]
   });
@@ -163,11 +163,11 @@ app.post('/api/generate-insights', async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are a shipping market analyst. Keep your analysis light and focused on key trends. Use shipping industry terminology naturally. Focus on practical implications for charterers and shipowners. Limit each insight to 1-2 sentences."
+          content: "You're a savvy shipping analyst with a knack for spotting trends. Keep it light and snappy! Use industry lingo naturally, and focus on what matters to charterers and owners. Think tweet-length insights that pack a punch. 🚢"
         },
         {
           role: "user",
-          content: `Analyze these shipping metrics and provide 2-3 key market insights:\n${JSON.stringify(metrics, null, 2)}`
+          content: `What's the scoop on these shipping metrics? Give me 2-3 quick hits:\n${JSON.stringify(metrics, null, 2)}`
         }
       ],
       temperature: 0.7,
