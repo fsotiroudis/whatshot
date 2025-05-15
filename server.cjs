@@ -139,9 +139,23 @@ app.get('/api/voyages-demand', (req, res) => {
   res.json(generateMockVoyagesDemand(dayDate, vesselType, areaName));
 });
 
-// New endpoint for generating insights
+// New endpoint for generating insights with logging
 app.post('/api/generate-insights', async (req, res) => {
   const { metrics } = req.body;
+  
+  console.log('OpenAI API Request:', {
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: "You are a shipping market analyst expert. Analyze the provided metrics and generate insightful observations about market trends, focusing on significant changes and their potential implications."
+      },
+      {
+        role: "user",
+        content: `Please analyze these shipping market metrics and provide 3-4 key insights:\n${JSON.stringify(metrics, null, 2)}`
+      }
+    ]
+  });
   
   try {
     const completion = await openai.chat.completions.create({
@@ -160,13 +174,19 @@ app.post('/api/generate-insights', async (req, res) => {
       max_tokens: 250
     });
 
+    console.log('OpenAI API Response:', completion);
+
     const insights = completion.choices[0].message.content
       .split('\n')
       .filter(insight => insight.trim().length > 0);
 
     res.json({ insights });
   } catch (error) {
-    console.error('Error generating insights:', error);
+    console.error('OpenAI API Error:', {
+      message: error.message,
+      response: error.response?.data,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to generate insights' });
   }
 });
