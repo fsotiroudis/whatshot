@@ -149,13 +149,14 @@ app.post('/api/generate-insights', async (req, res) => {
       messages: [
         {
           role: "system",
-             content: "You're a no-nonsense shipping analyst who writes for execs with short attention spans. Your job is to turn dry shipping metrics into 2–3 tweet-sized, witty one-liners. Max 1 line per bullet. Skip titles, intros, or explanations. Use maritime lingo. Be clever, snappy, and fun."
+             content: "You're a sharp, sarcastic shipping analyst with a sense of humor. Output only 2-3 bullet points. Each point is a one-liner — short, clever, tweet-style. Use shipping slang where it fits. No titles. No intros. No explanations. Just punchy market takes. Never exceed one line per bullet."
+
 
 
         },
         {
           role: "user",
-  content: `Give me 2-3 quick and witty one-liners based on the following shipping metrics. Be punchy and fun — max one line each:\n${JSON.stringify(metrics, null, 2)}`
+  content: `Give me the quick scoop on these shipping metrics. Be snappy and fun:\n${JSON.stringify(metrics, null, 2)}`
         }
       ],
       temperature: 0.7,
