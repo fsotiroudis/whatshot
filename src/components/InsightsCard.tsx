@@ -22,7 +22,7 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ insights, isLoading }) => {
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-gray-500 text-sm mb-3">Market Insights</h3>
+      <h3 className="text-gray-500 text-sm mb-1">Market Pulse</h3>
       <ul className="space-y-2">
         {insights.map((insight, index) => (
           <li key={index} className="text-gray-700 text-sm">

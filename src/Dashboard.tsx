@@ -19,7 +19,8 @@ interface SignificantChange {
 const Dashboard: React.FC = () => {
   const [vesselType, setVesselType] = useState<VesselType>('Dry');
   const today = new Date().toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState(today);
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(oneWeekAgo);
   const [significantChanges, setSignificantChanges] = useState<SignificantChange[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
@@ -120,12 +121,12 @@ const Dashboard: React.FC = () => {
             portName="US Gulf"
             onSignificantChange={handleSignificantChange}
           />
-          <div className="mt-8">
-            <InsightsCard
-              insights={insights}
-              isLoading={isLoadingInsights}
-            />
-          </div>
+        </div>
+        <div className="mt-6">
+          <InsightsCard
+            insights={insights}
+            isLoading={isLoadingInsights}
+          />
         </div>
       </main>
     </div>
