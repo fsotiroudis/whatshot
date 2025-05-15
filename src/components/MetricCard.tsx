@@ -33,17 +33,25 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const weeklyChangeColor = weeklyChange ? getChangeColor(weeklyChange) : '';
   const monthlyChangeColor = monthlyChange ? getChangeColor(monthlyChange) : '';
 
-  // Calculate sparkline points
+  // Calculate sparkline points with improved trend visualization
   const getSparklinePoints = () => {
     if (historicalData.length < 2) return '';
+    
     const values = historicalData.map(d => d.value);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = max - min || 1;
     
+    // Adjust the Y-scale to emphasize the trend
+    // For positive trends, start from bottom (80) to top (20)
+    // For negative trends, start from top (20) to bottom (80)
+    const baseY = weeklyChange && weeklyChange > 0 ? 80 : 20;
+    const targetY = weeklyChange && weeklyChange > 0 ? 20 : 80;
+    
     return historicalData.map((point, i) => {
       const x = (i / (historicalData.length - 1)) * 100;
-      const y = 100 - ((point.value - min) / range * 80);
+      const normalizedValue = (point.value - min) / range;
+      const y = baseY + (normalizedValue * (targetY - baseY));
       return `${x},${y}`;
     }).join(' ');
   };
@@ -90,7 +98,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </div>
 
           {historicalData.length > 0 && (
-            <div className="w-24 h-12">
+            <div className="w-24 h-16">
               <svg 
                 className="w-full h-full" 
                 viewBox="0 0 100 100" 

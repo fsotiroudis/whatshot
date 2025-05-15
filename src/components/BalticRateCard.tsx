@@ -43,8 +43,8 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) 
   const prevRate = previous ? previous.RATE : null;
   const change = prevRate !== null ? ((latest.RATE - prevRate) / prevRate) * 100 : 0;
 
-  // Generate historical data based on the current rate
-  const historicalData = generateHistoricalData(latest.RATE);
+  // Generate historical data based on the current rate and weekly change
+  const historicalData = generateHistoricalData(latest.RATE, change);
 
   return (
     <MetricCard

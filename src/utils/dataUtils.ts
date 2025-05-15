@@ -1,19 +1,38 @@
-// Add this function to your existing dataUtils.ts
-export const generateHistoricalData = (baseValue: number, points: number = 30): HistoricalDataPoint[] => {
+import { 
+  Route, 
+  Region, 
+  Port, 
+  BunkerPrice, 
+  TonnageSupply, 
+  CargoOrder, 
+  VesselType, 
+  SQLQuery, 
+  HistoricalDataPoint 
+} from '../types';
+
+// Updated to generate trend-aligned data
+export const generateHistoricalData = (currentValue: number, weeklyChange: number): HistoricalDataPoint[] => {
   const data: HistoricalDataPoint[] = [];
-  let currentValue = baseValue;
+  const points = 30; // 30 days of data
+  
+  // Calculate the starting value based on the weekly change
+  // We want the graph to show the overall trend matching the weekly change
+  const changePerDay = (weeklyChange / 7) / 100; // Convert weekly percentage to daily rate
+  const startValue = currentValue / (1 + (changePerDay * points));
   
   for (let i = points; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     
-    // Add some random variation (-5% to +5%)
-    const variation = (Math.random() - 0.5) * 0.1;
-    currentValue = currentValue * (1 + variation);
+    // Calculate the value for this point
+    // Add small random variations while maintaining the overall trend
+    const trendValue = startValue * (1 + (changePerDay * (points - i)));
+    const randomVariation = (Math.random() - 0.5) * 0.02 * trendValue; // ±1% random variation
+    const value = trendValue + randomVariation;
     
     data.push({
       date: date.toISOString().split('T')[0],
-      value: Number(currentValue.toFixed(2))
+      value: Number(value.toFixed(2))
     });
   }
   
