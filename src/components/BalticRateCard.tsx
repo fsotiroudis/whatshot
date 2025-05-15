@@ -12,9 +12,15 @@ interface BalticRateRow {
 interface BalticRateCardProps {
   dayDate: string;
   vesselType: string;
+  onSignificantChange?: (change: {
+    title: string;
+    value: number;
+    change: number;
+    unit: string;
+  }) => void;
 }
 
-const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) => {
+const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType, onSignificantChange }) => {
   const [data, setData] = useState<BalticRateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,16 +33,60 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) 
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
       })
-      .then(setData)
-      .catch(err => setError(err.message))
+      .then(data => {
+        console.log('Received data:', data);
+        setData(data);
+      })
+      .catch(err => {
+        console.error('Error fetching data:', err);
+        setError(err.message);
+      })
       .finally(() => setLoading(false));
   }, [dayDate, vesselType]);
+
+  useEffect(() => {
+    if (!data.length || !onSignificantChange) return;
+
+    const mostImportant = data.reduce((max, row) => {
+      const prevDay = data.find(r => 
+        r.ROUTEID === row.ROUTEID && 
+        r.RATEDATE < row.RATEDATE
+      );
+      const prevRate = prevDay ? prevDay.RATE : null;
+      const currentChange = prevRate !== null ? Math.abs((row.RATE - prevRate) / prevRate) * 100 : 0;
+      
+      const maxPrevDay = data.find(r => 
+        r.ROUTEID === max.ROUTEID && 
+        r.RATEDATE < max.RATEDATE
+      );
+      const maxPrevRate = maxPrevDay ? maxPrevDay.RATE : null;
+      const maxChange = maxPrevRate !== null ? Math.abs((max.RATE - maxPrevRate) / maxPrevRate) * 100 : 0;
+      
+      return currentChange > maxChange ? row : max;
+    }, data[0]);
+
+    const prevDay = data.find(row =>
+      row.ROUTEID === mostImportant.ROUTEID &&
+      row.RATEDATE < mostImportant.RATEDATE
+    );
+    const prevRate = prevDay ? prevDay.RATE : null;
+    const change = prevRate !== null ? ((mostImportant.RATE - prevRate) / prevRate) * 100 : 0;
+    const isSignificant = Math.abs(change) >= 10;
+
+    if (isSignificant) {
+      onSignificantChange({
+        title: "Baltic Rate",
+        value: mostImportant.RATE,
+        change: change,
+        unit: "points"
+      });
+    }
+  }, [data, onSignificantChange]);
 
   if (loading) return <div className="bg-white rounded-lg shadow p-4 animate-pulse h-24" />;
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return <div>No data found.</div>;
 
-  // Find the row with the largest rate change
   const mostImportant = data.reduce((max, row) => {
     const prevDay = data.find(r => 
       r.ROUTEID === row.ROUTEID && 
@@ -55,7 +105,6 @@ const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) 
     return currentChange > maxChange ? row : max;
   }, data[0]);
 
-  // Find previous day's rate for the same route
   const prevDay = data.find(row =>
     row.ROUTEID === mostImportant.ROUTEID &&
     row.RATEDATE < mostImportant.RATEDATE

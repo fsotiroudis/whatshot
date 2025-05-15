@@ -1,73 +1,132 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import { VesselType } from './types';
-import { generateInsights } from './utils/dataUtils';
 import VesselCountCard from './components/VesselCountCard';
 import BalticRateCard from './components/BalticRateCard';
 import CongestionVesselCountCard from './components/CongestionVesselCountCard';
 import TonnageSupplyCard from './components/TonnageSupplyCard';
 import VoyagesDemandCard from './components/VoyagesDemandCard';
 import CongestionPortDaysCard from './components/CongestionPortDaysCard';
+import InsightsCard from './components/InsightsCard';
+
+interface SignificantChange {
+  title: string;
+  value: number;
+  change: number;
+  unit: string;
+}
 
 const Dashboard: React.FC = () => {
   const [vesselType, setVesselType] = useState<VesselType>('Dry');
+  const today = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [significantChanges, setSignificantChanges] = useState<SignificantChange[]>([]);
   const [insights, setInsights] = useState<string[]>([]);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState(sevenDaysAgo);
+  const handleSignificantChange = useCallback((change: SignificantChange) => {
+    setSignificantChanges(prev => {
+      const filtered = prev.filter(c => c.title !== change.title);
+      return [...filtered, change];
+    });
+  }, []);
 
-  const refreshData = useCallback(() => {
-    setInsights(generateInsights(vesselType));
-  }, [vesselType]);
+  const generateInsights = useCallback(async () => {
+    if (significantChanges.length === 0) return;
+
+    setIsLoadingInsights(true);
+    try {
+      const response = await fetch('http://localhost:4000/api/generate-insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ metrics: significantChanges }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate insights');
+      const data = await response.json();
+      setInsights(data.insights);
+    } catch (error) {
+      console.error('Error generating insights:', error);
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  }, [significantChanges]);
+
+  useEffect(() => {
+    generateInsights();
+  }, [significantChanges, generateInsights]);
 
   const handleVesselTypeChange = (type: VesselType) => {
     setVesselType(type);
-    refreshData();
+    setSignificantChanges([]);
+    setInsights([]);
   };
-
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         vesselType={vesselType}
         onVesselTypeChange={handleVesselTypeChange}
-        onRefresh={refreshData}
+        onRefresh={() => setSignificantChanges([])}
       />
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Date
+          </label>
           <input
             type="date"
-            className="border rounded px-2 py-1 mb-4"
+            className="border rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedDate}
-            max={new Date().toISOString().split('T')[0]}
-            onChange={e => setSelectedDate(e.target.value)}
+            max={today}
+            onChange={(e) => setSelectedDate(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <VesselCountCard dayDate={selectedDate} vesselType={vesselType} />
-          <BalticRateCard dayDate={selectedDate} vesselType={vesselType} />
-          <CongestionVesselCountCard dayDate={selectedDate} portName="Rotterdam" vesselType={vesselType} />
-          <CongestionPortDaysCard dayDate={selectedDate} portName="Rotterdam" vesselType={vesselType} />
-          <TonnageSupplyCard dayDate={selectedDate} vesselType={vesselType} portName="Houston" />
-          <VoyagesDemandCard dayDate={selectedDate} vesselType={vesselType} areaName="US Gulf" />
-        </div>
-        {insights.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-2">Key Changes</h3>
-            <ul className="space-y-2">
-              {insights.slice(0, 3).map((insight, index) => (
-                <li key={index} className="flex items-start text-sm">
-                  <span className="text-blue-600 mr-2">•</span>
-                  <span>{insight}</span>
-                </li>
-              ))}
-            </ul>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <VesselCountCard
+            dayDate={selectedDate}
+            vesselType={vesselType}
+            onSignificantChange={handleSignificantChange}
+          />
+          <BalticRateCard
+            dayDate={selectedDate}
+            vesselType={vesselType}
+            onSignificantChange={handleSignificantChange}
+          />
+          <CongestionVesselCountCard
+            dayDate={selectedDate}
+            portName="Rotterdam"
+            vesselType={vesselType}
+            onSignificantChange={handleSignificantChange}
+          />
+          <CongestionPortDaysCard
+            dayDate={selectedDate}
+            portName="Rotterdam"
+            vesselType={vesselType}
+            onSignificantChange={handleSignificantChange}
+          />
+          <TonnageSupplyCard
+            dayDate={selectedDate}
+            vesselType={vesselType}
+            portName="Houston"
+            onSignificantChange={handleSignificantChange}
+          />
+          <VoyagesDemandCard
+            dayDate={selectedDate}
+            vesselType={vesselType}
+            portName="US Gulf"
+            onSignificantChange={handleSignificantChange}
+          />
+          <div className="mt-8">
+            <InsightsCard
+              insights={insights}
+              isLoading={isLoadingInsights}
+            />
           </div>
-        )}
+        </div>
       </main>
     </div>
   );

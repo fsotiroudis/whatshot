@@ -11,36 +11,70 @@ interface VesselCountRow {
 interface VesselCountCardProps {
   dayDate: string;
   vesselType: string;
+  onSignificantChange?: (change: {
+    title: string;
+    value: number;
+    change: number;
+    unit: string;
+  }) => void;
 }
 
-const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }) => {
+const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType, onSignificantChange }) => {
   const [data, setData] = useState<VesselCountRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     setError(null);
-    fetch(`http://localhost:4000/api/vessel-count?dayDate=${encodeURIComponent(dayDate)}&vesselType=${vesselType}`)
+    fetch(`http://localhost:4000/api/vessel-count?dayDate=${encodeURIComponent(dayDate)}&vesselType=${encodeURIComponent(vesselType)}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
       })
-      .then(setData)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+      .then(data => {
+        console.log('Received data:', data);
+        setData(data);
+      })
+      .catch(err => {
+        console.error('Error fetching data:', err);
+        setError(err.message);
+      });
   }, [dayDate, vesselType]);
 
-  if (loading) return <div className="bg-white rounded-lg shadow p-4 animate-pulse h-24" />;
-  if (error) return <div className="text-red-600">Error: {error}</div>;
-  if (!data.length) return <div>No data found.</div>;
+  useEffect(() => {
+    if (!data.length || !onSignificantChange) return;
 
-  // Find the row with the largest vessel count
+    const mostImportant = data.reduce((max, row) =>
+      row.VESSELCOUNT > max.VESSELCOUNT ? row : max, data[0]
+    );
+
+    const prevDay = data.find(row =>
+      row.VESSELTYPE === mostImportant.VESSELTYPE &&
+      row.VESSELCLASS === mostImportant.VESSELCLASS &&
+      row.CURRENTAREANAMELEVEL0 === mostImportant.CURRENTAREANAMELEVEL0 &&
+      row.DAYDATE < mostImportant.DAYDATE
+    );
+
+    const prevCount = prevDay ? prevDay.VESSELCOUNT : null;
+    const change = prevCount !== null ? ((mostImportant.VESSELCOUNT - prevCount) / prevCount) * 100 : 0;
+    const isSignificant = Math.abs(change) >= 10;
+
+    if (isSignificant) {
+      onSignificantChange({
+        title: "Vessel Count",
+        value: mostImportant.VESSELCOUNT,
+        change: change,
+        unit: "vessels"
+      });
+    }
+  }, [data, onSignificantChange]);
+
+  if (error) return <div className="text-red-600">Error: {error}</div>;
+  if (!data || !data.length) return null;
+
   const mostImportant = data.reduce((max, row) =>
     row.VESSELCOUNT > max.VESSELCOUNT ? row : max, data[0]
   );
 
-  // Find previous day's count for the same group (if available)
   const prevDay = data.find(row =>
     row.VESSELTYPE === mostImportant.VESSELTYPE &&
     row.VESSELCLASS === mostImportant.VESSELCLASS &&
@@ -61,7 +95,7 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {mostImportant.VESSELCOUNT.toLocaleString()}
+              {mostImportant.VESSELCOUNT}
             </span>
             <span className="ml-1 text-gray-500 text-sm">vessels</span>
           </div>

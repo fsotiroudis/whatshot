@@ -12,31 +12,83 @@ interface TonnageSupplyCardProps {
   dayDate: string;
   vesselType: string;
   portName: string;
+  onSignificantChange?: (change: {
+    title: string;
+    value: number;
+    change: number;
+    unit: string;
+  }) => void;
 }
 
-const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselType, portName }) => {
+const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselType, portName, onSignificantChange }) => {
   const [data, setData] = useState<TonnageSupplyRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     setError(null);
     fetch(`http://localhost:4000/api/tonnage-supply?dayDate=${encodeURIComponent(dayDate)}&vesselType=${encodeURIComponent(vesselType)}&portName=${encodeURIComponent(portName)}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
       })
-      .then(setData)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+      .then(data => {
+        console.log('Received data:', data);
+        setData(data);
+      })
+      .catch(err => {
+        console.error('Error fetching data:', err);
+        setError(err.message);
+      });
   }, [dayDate, vesselType, portName]);
 
-  if (loading) return <div className="bg-white rounded-lg shadow p-4 animate-pulse h-24" />;
-  if (error) return <div className="text-red-600">Error: {error}</div>;
-  if (!data.length) return <div>No data found.</div>;
+  useEffect(() => {
+    if (!data.length || !onSignificantChange) return;
 
-  // Find the row with the largest supply change
+    const mostImportant = data.reduce((max, row) => {
+      const prevDay = data.find(r => 
+        r.VESSELTYPE === row.VESSELTYPE && 
+        r.VESSELCLASS === row.VESSELCLASS &&
+        r.PORTNAME === row.PORTNAME &&
+        r.DAYDATE < row.DAYDATE
+      );
+      const prevSupply = prevDay ? prevDay.SUPPLY : null;
+      const currentChange = prevSupply !== null ? Math.abs((row.SUPPLY - prevSupply) / prevSupply) * 100 : 0;
+      
+      const maxPrevDay = data.find(r => 
+        r.VESSELTYPE === max.VESSELTYPE && 
+        r.VESSELCLASS === max.VESSELCLASS &&
+        r.PORTNAME === max.PORTNAME &&
+        r.DAYDATE < max.DAYDATE
+      );
+      const maxPrevSupply = maxPrevDay ? maxPrevDay.SUPPLY : null;
+      const maxChange = maxPrevSupply !== null ? Math.abs((max.SUPPLY - maxPrevSupply) / maxPrevSupply) * 100 : 0;
+      
+      return currentChange > maxChange ? row : max;
+    }, data[0]);
+
+    const prevDay = data.find(row =>
+      row.VESSELTYPE === mostImportant.VESSELTYPE &&
+      row.VESSELCLASS === mostImportant.VESSELCLASS &&
+      row.PORTNAME === mostImportant.PORTNAME &&
+      row.DAYDATE < mostImportant.DAYDATE
+    );
+    const prevSupply = prevDay ? prevDay.SUPPLY : null;
+    const change = prevSupply !== null ? ((mostImportant.SUPPLY - prevSupply) / prevSupply) * 100 : 0;
+    const isSignificant = Math.abs(change) >= 10;
+
+    if (isSignificant) {
+      onSignificantChange({
+        title: "Tonnage Supply",
+        value: mostImportant.SUPPLY,
+        change: change,
+        unit: "vessels"
+      });
+    }
+  }, [data, onSignificantChange]);
+
+  if (error) return <div className="text-red-600">Error: {error}</div>;
+  if (!data || !data.length) return null;
+
   const mostImportant = data.reduce((max, row) => {
     const prevDay = data.find(r => 
       r.VESSELTYPE === row.VESSELTYPE && 
@@ -59,7 +111,6 @@ const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselTy
     return currentChange > maxChange ? row : max;
   }, data[0]);
 
-  // Find previous day's supply for the same group
   const prevDay = data.find(row =>
     row.VESSELTYPE === mostImportant.VESSELTYPE &&
     row.VESSELCLASS === mostImportant.VESSELCLASS &&
@@ -80,7 +131,7 @@ const TonnageSupplyCard: React.FC<TonnageSupplyCardProps> = ({ dayDate, vesselTy
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {mostImportant.SUPPLY.toLocaleString()}
+              {mostImportant.SUPPLY}
             </span>
             <span className="ml-1 text-gray-500 text-sm">vessels</span>
           </div>

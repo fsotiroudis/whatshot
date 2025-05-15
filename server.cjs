@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -107,7 +108,7 @@ app.get('/api/baltic-rate', (req, res) => {
         vc.VESSELCLASS,
         ROUTEID,
         RATEDATE`;
-    
+
     const binds = [vesselType, vesselType, vesselType, dayDate];
     console.log('Baltic Rate SQL:', sql);
     console.log('Baltic Rate Binds:', binds);
@@ -360,21 +361,21 @@ app.get('/api/congestion-port-days', (req, res) => {
 // New endpoint for generating insights with logging
 app.post('/api/generate-insights', async (req, res) => {
   const { metrics } = req.body;
-  
+
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4-turbo",
       messages: [
         {
           role: "system",
-             content: "You're a sharp, sarcastic shipping analyst with a sense of humor. Output only 2-3 bullet points. Each point is a one-liner — short, clever, tweet-style. Use shipping slang where it fits. No titles. No intros. No explanations. Just punchy market takes. Never exceed one line per bullet."
+          content: "You're a sharp, sarcastic shipping analyst with a sense of humor. Output only 2-3 bullet points. Each point is a one-liner — short, clever, tweet-style. Use shipping slang where it fits. No titles. No intros. No explanations. Just punchy market takes. Never exceed one line per bullet."
 
 
 
         },
         {
           role: "user",
-  content: `Give me the quick scoop on these shipping metrics. Be snappy and fun:\n${JSON.stringify(metrics, null, 2)}`
+          content: `Give me the quick scoop on these shipping metrics. Be snappy and fun:\n${JSON.stringify(metrics, null, 2)}`
         }
       ],
       temperature: 0.7,
