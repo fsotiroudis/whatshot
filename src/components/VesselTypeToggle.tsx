@@ -15,13 +15,13 @@ const VesselTypeToggle: React.FC<VesselTypeToggleProps> = ({
       <button
         type="button"
         className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-          vesselType === 'Dry Bulk'
+          vesselType === 'Dry'
             ? 'bg-blue-600 text-white hover:bg-blue-700'
             : 'bg-white text-gray-700 hover:bg-gray-50'
         } transition-colors duration-200 ease-in-out`}
-        onClick={() => onVesselTypeChange('Dry Bulk')}
+        onClick={() => onVesselTypeChange('Dry')}
       >
-        Dry Bulk
+        Dry
       </button>
       <button
         type="button"

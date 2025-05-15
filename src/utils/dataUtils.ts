@@ -1,5 +1,4 @@
 import { 
-  Metric, 
   Route, 
   Region, 
   Port, 
@@ -7,12 +6,13 @@ import {
   TonnageSupply, 
   CargoOrder, 
   VesselType, 
-  SQLQuery 
+  SQLQuery, 
+  HistoricalDataPoint 
 } from '../types';
 
 // Mock data generator functions
 export const generateMockRoutes = (vesselType: VesselType): Route[] => {
-  if (vesselType === 'Dry Bulk') {
+  if (vesselType === 'Dry') {
     return [
       {
         id: '1',
@@ -82,7 +82,7 @@ export const generateMockRoutes = (vesselType: VesselType): Route[] => {
 };
 
 export const generateMockRegions = (vesselType: VesselType): Region[] => {
-  if (vesselType === 'Dry Bulk') {
+  if (vesselType === 'Dry') {
     return [
       {
         id: '1',
@@ -140,7 +140,7 @@ export const generateMockRegions = (vesselType: VesselType): Region[] => {
 };
 
 export const generateMockPorts = (vesselType: VesselType): Port[] => {
-  if (vesselType === 'Dry Bulk') {
+  if (vesselType === 'Dry') {
     return [
       {
         id: '1',
@@ -227,10 +227,10 @@ export const generateMockBunkerPrices = (): BunkerPrice[] => {
 };
 
 export const generateMockTonnageSupply = (vesselType: VesselType): TonnageSupply => {
-  if (vesselType === 'Dry Bulk') {
+  if (vesselType === 'Dry') {
     return {
       id: '1',
-      vesselType: 'Dry Bulk',
+      vesselType: 'Dry',
       supply: 895.2,
       previousSupply: 878.6,
       weeklyChange: 1.9,
@@ -249,7 +249,7 @@ export const generateMockTonnageSupply = (vesselType: VesselType): TonnageSupply
 };
 
 export const generateMockCargoOrders = (vesselType: VesselType): CargoOrder[] => {
-  if (vesselType === 'Dry Bulk') {
+  if (vesselType === 'Dry') {
     return [
       {
         id: '1',
@@ -307,7 +307,7 @@ export const generateMockCargoOrders = (vesselType: VesselType): CargoOrder[] =>
 };
 
 export const generateMockSQLQueries = (vesselType: VesselType): SQLQuery[] => {
-  const type = vesselType === 'Dry Bulk' ? 'dry_bulk' : 'tanker';
+  const type = vesselType === 'Dry' ? 'dry_bulk' : 'tanker';
   
   return [
     {
@@ -377,7 +377,7 @@ export const generateInsights = (vesselType: VesselType): string[] => {
   const regions = generateMockRegions(vesselType);
   const ports = generateMockPorts(vesselType);
   const bunkerPrices = generateMockBunkerPrices();
-  const tonnageSupply = generateMockTonnageSupply(vesselType);
+  // const tonnageSupply = generateMockTonnageSupply(vesselType); // Removed unused variable
   const cargoOrders = generateMockCargoOrders(vesselType);
   
   const insights: string[] = [];

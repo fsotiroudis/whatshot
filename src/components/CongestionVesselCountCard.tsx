@@ -1,27 +1,28 @@
 import React, { useEffect, useState } from 'react';
 
-interface VesselCountRow {
+interface CongestionVesselCountRow {
   DAYDATE: string;
   VESSELTYPE: string;
   VESSELCLASS: string;
-  CURRENTAREANAMELEVEL0: string;
-  VESSEL_COUNT: number;
+  PORTNAME: string;
+  CONGESTEDVESSELS: number;
 }
 
-interface VesselCountCardProps {
+interface CongestionVesselCountCardProps {
   dayDate: string;
+  portName: string;
   vesselType: string;
 }
 
-const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }) => {
-  const [data, setData] = useState<VesselCountRow[]>([]);
+const CongestionVesselCountCard: React.FC<CongestionVesselCountCardProps> = ({ dayDate, portName, vesselType }) => {
+  const [data, setData] = useState<CongestionVesselCountRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`http://localhost:4000/api/vessel-count?dayDate=${encodeURIComponent(dayDate)}&vesselType=${vesselType}`)
+    fetch(`http://localhost:4000/api/congestion-vessel-count?dayDate=${encodeURIComponent(dayDate)}&portName=${encodeURIComponent(portName)}&vesselType=${encodeURIComponent(vesselType)}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
@@ -29,36 +30,28 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
       .then(setData)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [dayDate, vesselType]);
+  }, [dayDate, portName, vesselType]);
 
   if (loading) return <div className="bg-white rounded-lg shadow p-4 animate-pulse h-24" />;
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return <div>No data found.</div>;
 
-  // Find the row with the largest vessel count
-  const mostImportant = data.reduce((max, row) =>
-    row.VESSEL_COUNT > max.VESSEL_COUNT ? row : max, data[0]
-  );
-
-  // Find previous day's count for the same group (if available)
-  const prevDay = data.find(row =>
-    row.VESSELTYPE === mostImportant.VESSELTYPE &&
-    row.VESSELCLASS === mostImportant.VESSELCLASS &&
-    row.CURRENTAREANAMELEVEL0 === mostImportant.CURRENTAREANAMELEVEL0 &&
-    row.DAYDATE < mostImportant.DAYDATE
-  );
-  const prevCount = prevDay ? prevDay.VESSEL_COUNT : null;
-  const change = prevCount !== null ? ((mostImportant.VESSEL_COUNT - prevCount) / prevCount) * 100 : 0;
+  // Sort by DAYDATE descending to get the latest and previous
+  const sorted = [...data].sort((a, b) => b.DAYDATE.localeCompare(a.DAYDATE));
+  const latest = sorted[0];
+  const previous = sorted[1];
+  const prevCount = previous ? previous.CONGESTEDVESSELS : null;
+  const change = prevCount !== null ? ((latest.CONGESTEDVESSELS - prevCount) / prevCount) * 100 : 0;
   const changeColor = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500';
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-gray-500 text-sm mb-1">Vessel Count (Most Significant)</h3>
+      <h3 className="text-gray-500 text-sm mb-1">Congested Vessels</h3>
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {mostImportant.VESSEL_COUNT.toLocaleString()}
+              {latest.CONGESTEDVESSELS.toLocaleString()}
             </span>
             <span className="ml-1 text-gray-500 text-sm">vessels</span>
           </div>
@@ -75,11 +68,10 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
         </div>
       </div>
       <div className="mt-2 text-gray-700 text-xs">
-        {mostImportant.VESSELTYPE} / {mostImportant.VESSELCLASS} in {mostImportant.CURRENTAREANAMELEVEL0} <br />
-        <span className="text-gray-400">as of {mostImportant.DAYDATE}</span>
+        {latest.VESSELTYPE} / {latest.VESSELCLASS} in {latest.PORTNAME} as of {latest.DAYDATE}
       </div>
     </div>
   );
 };
 
-export default VesselCountCard; 
+export default CongestionVesselCountCard; 

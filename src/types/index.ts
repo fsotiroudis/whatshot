@@ -1,4 +1,4 @@
-export type VesselType = 'Dry Bulk' | 'Tanker';
+export type VesselType = 'Dry' | 'Tanker';
 
 export interface Metric {
   id: string;

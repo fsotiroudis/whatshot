@@ -1,27 +1,28 @@
 import React, { useEffect, useState } from 'react';
 
-interface VesselCountRow {
-  DAYDATE: string;
-  VESSELTYPE: string;
-  VESSELCLASS: string;
-  CURRENTAREANAMELEVEL0: string;
-  VESSEL_COUNT: number;
+interface BalticRateRow {
+  RATEDATE: string;
+  ROUTEID: string;
+  RATE: number;
+  VESSELTYPE?: string;
+  VESSELCLASS?: string;
+  // Add other fields if needed
 }
 
-interface VesselCountCardProps {
+interface BalticRateCardProps {
   dayDate: string;
   vesselType: string;
 }
 
-const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }) => {
-  const [data, setData] = useState<VesselCountRow[]>([]);
+const BalticRateCard: React.FC<BalticRateCardProps> = ({ dayDate, vesselType }) => {
+  const [data, setData] = useState<BalticRateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`http://localhost:4000/api/vessel-count?dayDate=${encodeURIComponent(dayDate)}&vesselType=${vesselType}`)
+    fetch(`http://localhost:4000/api/baltic-rate?dayDate=${encodeURIComponent(dayDate)}&vesselType=${encodeURIComponent(vesselType)}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
@@ -35,32 +36,24 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!data.length) return <div>No data found.</div>;
 
-  // Find the row with the largest vessel count
-  const mostImportant = data.reduce((max, row) =>
-    row.VESSEL_COUNT > max.VESSEL_COUNT ? row : max, data[0]
-  );
-
-  // Find previous day's count for the same group (if available)
-  const prevDay = data.find(row =>
-    row.VESSELTYPE === mostImportant.VESSELTYPE &&
-    row.VESSELCLASS === mostImportant.VESSELCLASS &&
-    row.CURRENTAREANAMELEVEL0 === mostImportant.CURRENTAREANAMELEVEL0 &&
-    row.DAYDATE < mostImportant.DAYDATE
-  );
-  const prevCount = prevDay ? prevDay.VESSEL_COUNT : null;
-  const change = prevCount !== null ? ((mostImportant.VESSEL_COUNT - prevCount) / prevCount) * 100 : 0;
+  // Sort by RATEDATE descending to get the latest and previous
+  const sorted = [...data].sort((a, b) => b.RATEDATE.localeCompare(a.RATEDATE));
+  const latest = sorted[0];
+  const previous = sorted[1];
+  const prevRate = previous ? previous.RATE : null;
+  const change = prevRate !== null ? ((latest.RATE - prevRate) / prevRate) * 100 : 0;
   const changeColor = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500';
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <h3 className="text-gray-500 text-sm mb-1">Vessel Count (Most Significant)</h3>
+      <h3 className="text-gray-500 text-sm mb-1">Baltic Rate</h3>
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-baseline">
             <span className="text-2xl font-semibold">
-              {mostImportant.VESSEL_COUNT.toLocaleString()}
+              {latest.RATE.toLocaleString()}
             </span>
-            <span className="ml-1 text-gray-500 text-sm">vessels</span>
+            <span className="ml-1 text-gray-500 text-sm">WS</span>
           </div>
           <div className="mt-1 flex items-center">
             <span className={`${changeColor} text-sm font-medium`}>
@@ -75,11 +68,13 @@ const VesselCountCard: React.FC<VesselCountCardProps> = ({ dayDate, vesselType }
         </div>
       </div>
       <div className="mt-2 text-gray-700 text-xs">
-        {mostImportant.VESSELTYPE} / {mostImportant.VESSELCLASS} in {mostImportant.CURRENTAREANAMELEVEL0} <br />
-        <span className="text-gray-400">as of {mostImportant.DAYDATE}</span>
+        {latest.ROUTEID} as of {latest.RATEDATE}
+        {latest.VESSELTYPE && latest.VESSELCLASS && (
+          <span> — {latest.VESSELTYPE} / {latest.VESSELCLASS}</span>
+        )}
       </div>
     </div>
   );
 };
 
-export default VesselCountCard; 
+export default BalticRateCard; 
