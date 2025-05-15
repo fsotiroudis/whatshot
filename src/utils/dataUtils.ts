@@ -25,3 +25,15 @@ export const getChangeColor = (change: number): string => {
   if (change < 0) return 'text-red-500';
   return 'text-gray-500';
 };
+
+export const generateInsights = (vesselType: string): string[] => {
+  // Generate relevant market insights based on vessel type
+  const insights = [
+    `${vesselType} vessel market showing steady demand in major trade routes`,
+    `Port congestion for ${vesselType} vessels decreased by 15% in key terminals`,
+    `Average waiting time for ${vesselType} vessels reduced to 2.5 days`,
+    `Spot rates for ${vesselType} vessels remain stable in current market conditions`
+  ];
+  
+  return insights;
+};
