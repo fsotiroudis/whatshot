@@ -15,10 +15,9 @@ export const generateHistoricalData = (currentValue: number, weeklyChange: numbe
   const data: HistoricalDataPoint[] = [];
   const points = 30; // 30 days of data
   
-  // For negative trends, start high and end low
-  // For positive trends, start low and end high
+  // Calculate start value based on trend direction
   const startValue = weeklyChange < 0 
-    ? currentValue * (1 + Math.abs(weeklyChange) / 100)  // Start higher for negative trend
+    ? currentValue / (1 - Math.abs(weeklyChange) / 100)  // Start higher for negative trend
     : currentValue / (1 + weeklyChange / 100);           // Start lower for positive trend
   
   for (let i = 0; i <= points; i++) {
@@ -31,18 +30,23 @@ export const generateHistoricalData = (currentValue: number, weeklyChange: numbe
     // Use cubic easing for smoother curve
     const easedProgress = progress * progress * (3 - 2 * progress);
     
-    // Calculate the base value following the trend
-    const trendValue = startValue + (currentValue - startValue) * easedProgress;
+    // Calculate value based on trend direction
+    let value;
+    if (weeklyChange < 0) {
+      // For negative trend: start high, end low
+      value = startValue - (startValue - currentValue) * easedProgress;
+    } else {
+      // For positive trend: start low, end high
+      value = startValue + (currentValue - startValue) * easedProgress;
+    }
     
-    // Add smaller random variations to maintain clear trend visibility
-    const maxVariation = Math.abs(currentValue - startValue) * 0.05; // 5% of total change
+    // Add small random variations
+    const maxVariation = Math.abs(currentValue - startValue) * 0.03; // 3% variation
     const randomVariation = (Math.random() - 0.5) * maxVariation;
-    
-    const value = trendValue + randomVariation;
     
     data.push({
       date: date.toISOString().split('T')[0],
-      value: Number(value.toFixed(2))
+      value: Number((value + randomVariation).toFixed(2))
     });
   }
   
