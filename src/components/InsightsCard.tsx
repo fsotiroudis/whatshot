@@ -35,9 +35,11 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
         if (!response.ok) throw new Error('Failed to generate insights');
         
         const data = await response.json();
-        setInsights(data.insights);
+        setInsights(data.insights || []);
+        setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate insights');
+        setInsights([]);
       } finally {
         setIsGenerating(false);
       }
@@ -60,8 +62,11 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
           <div className="h-4 bg-gray-200 rounded w-5/6"></div>
         </div>
       ) : error ? (
-        <div className="text-red-500">{error}</div>
-      ) : (
+        <div className="text-red-500 p-4 rounded-md bg-red-50">
+          <p className="font-medium">Error generating insights:</p>
+          <p>{error}</p>
+        </div>
+      ) : insights.length > 0 ? (
         <ul className="space-y-3">
           {insights.map((insight, index) => (
             <li key={index} className="flex items-start text-gray-700">
@@ -70,6 +75,8 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
             </li>
           ))}
         </ul>
+      ) : (
+        <p className="text-gray-500 italic">No insights available. Please wait while we analyze the market data.</p>
       )}
     </div>
   );

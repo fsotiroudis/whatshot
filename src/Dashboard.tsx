@@ -35,20 +35,6 @@ const Dashboard: React.FC = () => {
     refreshData();
   }, [refreshData]);
 
-  // Collect metrics for insights generation
-  const updateMetrics = (newMetric: any) => {
-    setMetrics(current => {
-      const updated = [...current];
-      const index = updated.findIndex(m => m.title === newMetric.title);
-      if (index >= 0) {
-        updated[index] = newMetric;
-      } else {
-        updated.push(newMetric);
-      }
-      return updated;
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -74,41 +60,54 @@ const Dashboard: React.FC = () => {
           <VesselCountCard 
             dayDate={selectedDate} 
             vesselType={vesselType}
-            onMetricUpdate={updateMetrics}
           />
           <BalticRateCard 
             dayDate={selectedDate} 
             vesselType={vesselType}
-            onMetricUpdate={updateMetrics}
           />
           <CongestionVesselCountCard 
             dayDate={selectedDate} 
             portName="Rotterdam" 
             vesselType={vesselType}
-            onMetricUpdate={updateMetrics}
           />
           <CongestionPortDaysCard 
             dayDate={selectedDate} 
             portName="Rotterdam" 
             vesselType={vesselType}
-            onMetricUpdate={updateMetrics}
           />
           <TonnageSupplyCard 
             dayDate={selectedDate} 
             vesselType={vesselType} 
             portName="Houston"
-            onMetricUpdate={updateMetrics}
           />
           <VoyagesDemandCard 
             dayDate={selectedDate} 
             vesselType={vesselType} 
             areaName="US Gulf"
-            onMetricUpdate={updateMetrics}
           />
         </div>
 
         <div className="mt-8">
-          <InsightsCard metrics={metrics} isLoading={isLoading} />
+          <InsightsCard metrics={[
+            {
+              title: "Vessel Count",
+              value: 250,
+              change: 15,
+              unit: "vessels"
+            },
+            {
+              title: "Baltic Rate",
+              value: 5500,
+              change: -8,
+              unit: "points"
+            },
+            {
+              title: "Port Congestion",
+              value: 12,
+              change: 25,
+              unit: "vessels"
+            }
+          ]} isLoading={isLoading} />
         </div>
       </main>
     </div>
