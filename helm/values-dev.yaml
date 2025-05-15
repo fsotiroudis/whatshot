@@ -1,0 +1,50 @@
+global:
+  namespace: whatshot
+  version: ${VERSION}
+  team: Gr9
+
+managedIdentity:
+  enabled: false
+
+WebApis:
+  # Main API
+  - name: whatshot
+    app: whatshot
+    replicaCount: 3
+    image:
+      repository: signalacr.azurecr.io/whatshot
+    port: 80
+    targetPort: 8080
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      external-dns.alpha.kubernetes.io/hostname: "whatshot.dev.k8s.signalocean.com"
+    resources:
+      limits:
+        cpu: 1200m
+        memory: 1000Mi
+      requests:
+        cpu: 800m
+        memory: 500Mi
+    readinessProbe:
+        path: "/ready"
+    livenessProbe:
+        path: "/ready"
+    startupProbe:
+        path: "/warmup"
+    ingress:
+        enabled: true
+        hostnames:
+            - whatshotdev.signalocean.com
+     
+config:
+  enabled: true
+  data:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    AZURE_APP_CONFIG_ENVIRONMENT: "Dev"
+    OUTPUT_PATH: "/app"
+    
+secrets:
+  enabled: false
+      
+cronjob:
+  enabled: false
