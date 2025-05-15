@@ -52,7 +52,7 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center mb-4">
         <Lightbulb className="text-amber-500 mr-2" size={20} />
-        <h3 className="text-lg font-medium text-gray-900">Market Insights</h3>
+        <h3 className="text-lg font-medium text-gray-900">Market Pulse</h3>
       </div>
 
       {isLoading || isGenerating ? (
@@ -69,14 +69,14 @@ const InsightsCard: React.FC<InsightsCardProps> = ({ metrics, isLoading = false 
       ) : insights.length > 0 ? (
         <ul className="space-y-3">
           {insights.map((insight, index) => (
-            <li key={index} className="flex items-start text-gray-700">
-              <span className="text-blue-600 mr-2">•</span>
-              <span>{insight}</span>
+            <li key={index} className="flex items-start text-gray-600">
+              <span className="text-blue-500 mr-2">•</span>
+              <span className="text-sm leading-relaxed">{insight}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500 italic">No insights available. Please wait while we analyze the market data.</p>
+        <p className="text-gray-500 italic text-sm">Analyzing market conditions...</p>
       )}
     </div>
   );
