@@ -44,10 +44,11 @@ const MetricCard: React.FC<MetricCardProps> = ({
     // Calculate Y coordinate based on trend direction
     const getY = (value: number) => {
       const normalizedValue = (value - min) / range;
-      // Flip Y coordinates for negative trends
+      // For negative trends, start high and end low
+      // For positive trends, start low and end high
       return weeklyChange && weeklyChange < 0
-        ? 10 + (normalizedValue * 60) // Start high, end low
-        : 70 - (normalizedValue * 60); // Start low, end high
+        ? 10 + (normalizedValue * 60) // Start high, end low for negative trends
+        : 70 - (normalizedValue * 60); // Start low, end high for positive trends
     };
 
     // Create smooth curve using cubic bezier

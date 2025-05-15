@@ -15,9 +15,11 @@ export const generateHistoricalData = (currentValue: number, weeklyChange: numbe
   const data: HistoricalDataPoint[] = [];
   const points = 30; // 30 days of data
   
-  // Calculate the starting value based on the weekly change
-  const totalChange = weeklyChange / 100; // Convert percentage to decimal
-  const startValue = currentValue / (1 + totalChange);
+  // For negative trends, start high and end low
+  // For positive trends, start low and end high
+  const startValue = weeklyChange < 0 
+    ? currentValue * (1 + Math.abs(weeklyChange) / 100)  // Start higher for negative trend
+    : currentValue / (1 + weeklyChange / 100);           // Start lower for positive trend
   
   for (let i = 0; i <= points; i++) {
     const date = new Date();
@@ -32,8 +34,8 @@ export const generateHistoricalData = (currentValue: number, weeklyChange: numbe
     // Calculate the base value following the trend
     const trendValue = startValue + (currentValue - startValue) * easedProgress;
     
-    // Add small random variations while maintaining the overall trend
-    const maxVariation = Math.abs(currentValue - startValue) * 0.1; // 10% of total change
+    // Add smaller random variations to maintain clear trend visibility
+    const maxVariation = Math.abs(currentValue - startValue) * 0.05; // 5% of total change
     const randomVariation = (Math.random() - 0.5) * maxVariation;
     
     const value = trendValue + randomVariation;
