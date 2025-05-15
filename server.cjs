@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -107,6 +108,37 @@ const generateMockVoyagesDemand = (dayDate, vesselType, areaName) => {
   ];
 };
 
+// API endpoints
+app.get('/api/vessel-count', (req, res) => {
+  const { dayDate, vesselType } = req.query;
+  res.json(generateMockVesselCount(dayDate, vesselType));
+});
+
+app.get('/api/baltic-rate', (req, res) => {
+  const { dayDate, vesselType } = req.query;
+  res.json(generateMockBalticRate(dayDate, vesselType));
+});
+
+app.get('/api/congestion-vessel-count', (req, res) => {
+  const { dayDate, portName, vesselType } = req.query;
+  res.json(generateMockCongestionData(dayDate, portName, vesselType));
+});
+
+app.get('/api/congestion-port-days', (req, res) => {
+  const { dayDate, portName, vesselType } = req.query;
+  res.json(generateMockCongestionData(dayDate, portName, vesselType));
+});
+
+app.get('/api/tonnage-supply', (req, res) => {
+  const { dayDate, vesselType, portName } = req.query;
+  res.json(generateMockTonnageSupply(dayDate, vesselType, portName));
+});
+
+app.get('/api/voyages-demand', (req, res) => {
+  const { dayDate, vesselType, areaName } = req.query;
+  res.json(generateMockVoyagesDemand(dayDate, vesselType, areaName));
+});
+
 // New endpoint for generating insights
 app.post('/api/generate-insights', async (req, res) => {
   const { metrics } = req.body;
@@ -137,37 +169,6 @@ app.post('/api/generate-insights', async (req, res) => {
     console.error('Error generating insights:', error);
     res.status(500).json({ error: 'Failed to generate insights' });
   }
-});
-
-// API endpoints
-app.get('/api/vessel-count', (req, res) => {
-  const { dayDate, vesselType } = req.query;
-  res.json(generateMockVesselCount(dayDate, vesselType));
-});
-
-app.get('/api/baltic-rate', (req, res) => {
-  const { dayDate, vesselType } = req.query;
-  res.json(generateMockBalticRate(dayDate, vesselType));
-});
-
-app.get('/api/congestion-vessel-count', (req, res) => {
-  const { dayDate, portName, vesselType } = req.query;
-  res.json(generateMockCongestionData(dayDate, portName, vesselType));
-});
-
-app.get('/api/congestion-port-days', (req, res) => {
-  const { dayDate, portName, vesselType } = req.query;
-  res.json(generateMockCongestionData(dayDate, portName, vesselType));
-});
-
-app.get('/api/tonnage-supply', (req, res) => {
-  const { dayDate, vesselType, portName } = req.query;
-  res.json(generateMockTonnageSupply(dayDate, vesselType, portName));
-});
-
-app.get('/api/voyages-demand', (req, res) => {
-  const { dayDate, vesselType, areaName } = req.query;
-  res.json(generateMockVoyagesDemand(dayDate, vesselType, areaName));
 });
 
 const PORT = 4000;
