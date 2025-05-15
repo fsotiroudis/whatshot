@@ -16,18 +16,26 @@ export const generateHistoricalData = (currentValue: number, weeklyChange: numbe
   const points = 30; // 30 days of data
   
   // Calculate the starting value based on the weekly change
-  // We want the graph to show the overall trend matching the weekly change
-  const changePerDay = (weeklyChange / 7) / 100; // Convert weekly percentage to daily rate
-  const startValue = currentValue / (1 + (changePerDay * points));
+  const totalChange = weeklyChange / 100; // Convert percentage to decimal
+  const startValue = currentValue / (1 + totalChange);
   
-  for (let i = points; i >= 0; i--) {
+  for (let i = 0; i <= points; i++) {
     const date = new Date();
-    date.setDate(date.getDate() - i);
+    date.setDate(date.getDate() - (points - i));
     
-    // Calculate the value for this point
+    // Calculate progress through the period (0 to 1)
+    const progress = i / points;
+    
+    // Use cubic easing for smoother curve
+    const easedProgress = progress * progress * (3 - 2 * progress);
+    
+    // Calculate the base value following the trend
+    const trendValue = startValue + (currentValue - startValue) * easedProgress;
+    
     // Add small random variations while maintaining the overall trend
-    const trendValue = startValue * (1 + (changePerDay * (points - i)));
-    const randomVariation = (Math.random() - 0.5) * 0.02 * trendValue; // ±1% random variation
+    const maxVariation = Math.abs(currentValue - startValue) * 0.1; // 10% of total change
+    const randomVariation = (Math.random() - 0.5) * maxVariation;
+    
     const value = trendValue + randomVariation;
     
     data.push({

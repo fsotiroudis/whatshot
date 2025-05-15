@@ -32,7 +32,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const weeklyChangeColor = weeklyChange ? getChangeColor(weeklyChange) : '';
   const monthlyChangeColor = monthlyChange ? getChangeColor(monthlyChange) : '';
 
-  // Generate curved sparkline path
+  // Generate sparkline path with smooth curves
   const getSparklinePath = () => {
     if (historicalData.length < 2) return '';
     
@@ -41,29 +41,35 @@ const MetricCard: React.FC<MetricCardProps> = ({
     const max = Math.max(...values);
     const range = max - min || 1;
     
-    // For negative trends, flip the Y coordinates
-    const isNegative = weeklyChange && weeklyChange < 0;
+    // Calculate Y coordinate based on trend direction
     const getY = (value: number) => {
       const normalizedValue = (value - min) / range;
-      return isNegative 
-        ? 20 + (normalizedValue * 60) // Start high, end low for negative trends
-        : 80 - (normalizedValue * 60); // Start low, end high for positive trends
+      // Flip Y coordinates for negative trends
+      return weeklyChange && weeklyChange < 0
+        ? 10 + (normalizedValue * 60) // Start high, end low
+        : 70 - (normalizedValue * 60); // Start low, end high
     };
 
-    // Create curved path using cubic bezier curves
-    let path = `M 0,${getY(historicalData[0].value)}`;
+    // Create smooth curve using cubic bezier
+    const points = historicalData.map((point, i) => ({
+      x: (i / (historicalData.length - 1)) * 100,
+      y: getY(point.value)
+    }));
+
+    // Build SVG path with smooth curves
+    let path = `M ${points[0].x},${points[0].y}`;
     
-    for (let i = 1; i < historicalData.length; i++) {
-      const x1 = ((i - 1) / (historicalData.length - 1)) * 100;
-      const x2 = (i / (historicalData.length - 1)) * 100;
-      const y1 = getY(historicalData[i - 1].value);
-      const y2 = getY(historicalData[i].value);
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
       
-      // Control points for the curve
-      const cx1 = x1 + ((x2 - x1) / 3);
-      const cx2 = x2 - ((x2 - x1) / 3);
+      // Control points for smooth curve
+      const cp1x = prev.x + (curr.x - prev.x) / 3;
+      const cp2x = prev.x + 2 * (curr.x - prev.x) / 3;
+      const cp1y = prev.y;
+      const cp2y = curr.y;
       
-      path += ` C ${cx1},${y1} ${cx2},${y2} ${x2},${y2}`;
+      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${curr.x},${curr.y}`;
     }
     
     return path;
@@ -114,7 +120,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
             <div className="w-24 h-16">
               <svg 
                 className="w-full h-full" 
-                viewBox="0 0 100 100" 
+                viewBox="0 0 100 80" 
                 preserveAspectRatio="none"
               >
                 <path
