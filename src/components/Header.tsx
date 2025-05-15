@@ -17,13 +17,13 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <Coffee className="h-6 w-6 text-amber-600" />
+          <div className="flex items-center space-x-4">
+            <Coffee className="h-8 w-8 text-amber-600" />
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">What's Hot Today</h1>
-              <p className="text-sm text-gray-500">Signal Ocean Analytics</p>
+              <h1 className="text-3xl font-bold text-gray-900">What's Hot Today</h1>
+              <p className="text-sm text-gray-500 mt-1">Signal Ocean Analytics</p>
             </div>
           </div>
           
