@@ -19,3 +19,9 @@ export const generateHistoricalData = (baseValue: number, points: number = 30): 
   
   return data;
 };
+
+export const getChangeColor = (change: number): string => {
+  if (change > 0) return 'text-green-500';
+  if (change < 0) return 'text-red-500';
+  return 'text-gray-500';
+};
